@@ -1,0 +1,13 @@
+[Unit]
+Description=Home Assistant
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/home/pi/
+ExecStart=docker compose up -d
+
+[Install]
+WantedBy=multi-user.target
