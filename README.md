@@ -30,7 +30,7 @@ sudo usermod -aG docker "$USER"      # log out and back in afterwards
 sudo systemctl enable --now docker
 
 # 2. Get this repo
-git clone https://github.com/TimotejLabsky/ha-pi-docker.git
+git clone <this repo — Code ▸ Clone button> ha-pi-docker
 cd ha-pi-docker
 cp .env.example .env                 # optional: change HA_CONFIG_DIR / TZ
 
