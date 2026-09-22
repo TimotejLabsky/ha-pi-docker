@@ -1,22 +1,41 @@
-version: '3.9'
 services:
   homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:stable
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /home/cloud-key/homeassistant:/config
+    # Pinned on purpose — Home Assistant releases monthly with documented breaking
+    # changes. Bump deliberately (see README "Updating"), never :latest/:stable.
+    image: ghcr.io/home-assistant/home-assistant:2026.9.3
+    container_name: homeassistant
     restart: unless-stopped
-    privileged: true
+    # Host networking: mDNS/SSDP discovery, Matter/Thread and Bluetooth need the
+    # real network namespace. `ports:` would be ignored in this mode, so there
+    # is none — HA listens on :8123 on the host directly.
     network_mode: host
-    ports:
-      - "8123:8123"
+    environment:
+      - TZ=${TZ:-Europe/Bratislava}
+    volumes:
+      - ${HA_CONFIG_DIR:-./config}:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro   # Bluetooth integration talks to BlueZ over D-Bus
+    # USB Zigbee/Z-Wave sticks: pass the device through instead of `privileged`.
+    # Use the /dev/serial/by-id/ path — it is stable across reboots.
+    # devices:
+    #   - /dev/serial/by-id/usb-XXXX-if00-port0:/dev/ttyUSB0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.28-alpine
+    container_name: homeassistant-nginx
+    restart: unless-stopped
+    network_mode: host   # proxies to localhost:8123, so it shares the namespace
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    network_mode: host
-    ports:
-      - "80:80"
     depends_on:
       - homeassistant
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
