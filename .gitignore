@@ -1,0 +1,3 @@
+# Home Assistant runtime data (database, backups, secrets) — never commit.
+config/
+.env
